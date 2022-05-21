@@ -2,10 +2,14 @@ import logging
 
 import config
 import constants
+import banana_dev as banana
+import os
 
 from showdown.engine.objects import StateMutator
 from showdown.engine.select_best_move import pick_safest
 from showdown.engine.select_best_move import get_payoff_matrix
+
+from difflib import SequenceMatcher
 
 
 logger = logging.getLogger(__name__)
@@ -67,6 +71,73 @@ def pick_safest_move_from_battles(battles):
     bot_choice = decision[0]
     logger.debug("Safest: {}, {}".format(bot_choice, payoff))
     return bot_choice
+
+
+def pick_yamper_move(battles):
+    bot_choice = None
+    for _, b in enumerate(battles):
+        state = b.create_state()
+        mutator = StateMutator(state)
+        user_options, _ = b.get_all_options()
+        logger.debug("Searching through the state: {}".format(mutator.state))
+        bot_choice = ask_yamper(user_options, b.opponent.active.base_name)
+
+    return bot_choice
+
+
+def ask_yamper(user_options, opponent_pokemon):
+
+    attack = False
+    switch = False
+    switch_options = [s for s in [a for a in user_options if "switch" in a]]
+    attack_options = [a for a in user_options if "switch" not in a]
+    bot_choice = None
+
+    # If I can both switch or attack then I let decide Yamper
+    if switch_options and attack_options:
+        request = f"Oponent is a {opponent_pokemon}. Do you prefer attack or switch Pokemon?"
+        logger.info("Request: " + request)
+        model_parameters = {"text": request, "length": 24, "temperature": 0.3, "topK": 50, "topP": 0.9}
+
+        valid = False
+        while (not valid):
+            response = banana.run(os.environ['BANANA_API_KEY'], "gptj", model_parameters)["modelOutputs"][0]["output"].lower().strip()
+            logger.debug(response)
+            attack = "attack" in response
+            switch = "switch" in response
+            valid = attack ^ switch
+        logger.info(f"Response: {response}")
+        logger.debug(f"Attack = {attack}; Switch = {switch}")
+
+    
+    if attack and attack_options:
+        request = "Pick one of the following: " + ", ".join(attack_options)
+        request = request.replace(request[request.rindex(','):], " or" + request[request.rindex(',')+1:]) if "," in request else request
+        logger.info("Request: " + request)
+        bot_choice, response = get_valid_response(request, attack_options)
+        logger.info("Response: " + response)
+            
+    if switch and switch_options:
+        request = "Pick one of the following: " + ", ".join(s.replace("switch ", "") for s in switch_options)
+        request = request.replace(request[request.rindex(','):], " or" + request[request.rindex(',')+1:]) if "," in request else request
+        logger.info("Request: " + request)
+        bot_choice, response = get_valid_response(request, switch_options)
+        logger.info("Response: " + response)
+
+    return bot_choice
+
+
+def get_valid_response(request, options):
+    model_parameters = {"text": request, "length": 30, "temperature": 0.3, "topK": 50, "topP": 0.8}
+    response = None
+    bot_choice = None
+    while (bot_choice is None):
+        logger.debug("Request: " + request)
+        response = banana.run(os.environ['BANANA_API_KEY'], "gptj", model_parameters)["modelOutputs"][0]["output"].lower().strip()
+        logger.debug("Request: " + response)
+        choice = [a for a in options if a.replace("switch ", "") in response]
+        bot_choice = choice[0] if len(choice) == 1 else bot_choice
+    return bot_choice, response
 
 
 def pick_safest_move_using_dynamic_search_depth(battles):
