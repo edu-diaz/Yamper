@@ -1,7 +1,5 @@
-# Showdown  ![umbreon](https://play.pokemonshowdown.com/sprites/xyani/umbreon.gif)
-A Pokémon battle-bot that can play battles on [Pokemon Showdown](https://pokemonshowdown.com/).
-
-The bot can play single battles in generations 3 through 8 however some of the battle mechanics assume it is gen8.
+# Showdown  ![yamper](https://play.pokemonshowdown.com/sprites/xyani/yamper.gif)
+A Pokémon battle-bot based on NLP that can play battles on [Pokemon Showdown](https://pokemonshowdown.com/).
 
 ![badge](https://github.com/pmariglia/showdown/actions/workflows/pythonapp.yml/badge.svg)
 

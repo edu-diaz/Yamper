@@ -25,7 +25,7 @@ def parse_configs():
     env = Env()
     env.read_env()
 
-    config.battle_bot_module = env("BATTLE_BOT", 'safest')
+    config.battle_bot_module = env("BATTLE_BOT", "safest")
     config.save_replay = env.bool("SAVE_REPLAY", config.save_replay)
     config.use_relative_weights = env.bool("USE_RELATIVE_WEIGHTS", config.use_relative_weights)
     config.gambit_exe_path = env("GAMBIT_PATH", config.gambit_exe_path)
