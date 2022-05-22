@@ -1,4 +1,4 @@
-# Showdown  ![yamper](https://play.pokemonshowdown.com/sprites/xyani/yamper.gif)
+# Yamper  ![yamper](https://play.pokemonshowdown.com/sprites/xyani/yamper.gif)
 A Pokémon battle-bot based on NLP that can play battles on [Pokemon Showdown](https://pokemonshowdown.com/).
 
 ![badge](https://github.com/pmariglia/showdown/actions/workflows/pythonapp.yml/badge.svg)
@@ -13,7 +13,8 @@ Environment variables are used for configuration which are by default read from 
 
 The configurations available are:
 ```
-BATTLE_BOT: (string, default "safest") The BattleBot module to use. More on this below
+BATTLE_BOT: (string, default "yamper") The BattleBot module to use. More on this below
+TIMER: (string, default OFF) Request initiating timer at the beginning of the battle or not
 SAVE_REPLAY: (bool, default False) Specifies whether or not to save replays of the battles
 LOG_LEVEL: (string, default "DEBUG") The Python logging level 
 WEBSOCKET_URI: (string, default is the official PokemonShowdown websocket address: "sim.smogon.com:8000") The address to use to connect to the Pokemon Showdown websocket 
@@ -25,16 +26,7 @@ POKEMON_MODE: (string, required) The type of game this bot will play games in
 TEAM_NAME: (string, required if POKEMON_MODE is one where a team is required) The name of the file that contains the team you want to use. More on this below in the Specifying Teams section.
 RUN_COUNT: (integer, required) The amount of games this bot will play before quitting
 ROOM_NAME: (string, optional) Optionally join a room by this name is BOT_MODE is "ACCEPT_CHALLENGE"
-```
-
-Here is a minimal `.env` file. This configuration will log in and search for a gen8randombattle:
-```
-WEBSOCKET_URI=sim.smogon.com:8000
-PS_USERNAME=MyCoolUsername
-PS_PASSWORD=MySuperSecretPassword
-BOT_MODE=SEARCH_LADDER
-POKEMON_MODE=gen8randombattle
-RUN_COUNT=1
+BANANA_API_KEY: (string, required if BATTLE_BOT is yamper) The API key to connect with the GPT-J model developped by Banana.
 ```
 
 There is a sample `.env` file in this repository.
@@ -43,7 +35,7 @@ There is a sample `.env` file in this repository.
 
 **1. Clone**
 
-Clone the repository with `git clone https://github.com/pmariglia/showdown.git`
+Clone the repository with `git clone https://github.com/gameduser/Yamper.git`
 
 **2. Install Requirements**
 
@@ -70,16 +62,10 @@ This requires Docker 17.06 or higher.
 
 `docker run --env-file .env showdown`
 
-### Running on Heroku
-
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
-
-After deploying, go to the Resources tab and turn on the worker.
-
 ## Battle Bots
 
 ### Safest
-use `BATTLE_BOT=safest` (default unless otherwise specified)
+use `BATTLE_BOT=safest`
 
 The bot searches through the game-tree for two turns and selects the move that minimizes the possible loss for a turn.
 
@@ -91,44 +77,12 @@ This is equivalent to the [Expectiminimax](https://en.wikipedia.org/wiki/Expecti
 
 This decision type is deterministic - the bot will always make the same move given the same situation again.
 
-### Nash-Equilibrium (experimental)
-use `BATTLE_BOT=nash_equilibrium`
+### Yamper
+use `BATTLE_BOT=yamper` (default unless otherwise specified)
 
-Using the information it has, plus some assumptions about the opponent, the bot will attempt to calculate the [Nash-Equilibrium](https://en.wikipedia.org/wiki/Nash_equilibrium) with the highest payoff
-and select a move from that distribution.
+Using the [Banana GPT-J public model](https://www.banana.dev/pretrained-models/python3/gptj), it will decide each next movement by asking the model with an API call. Options are usually attacking or switching Pokemon, so first it asks what does it prefer. If decides to attack, we request which attack does prefer. Finally the answer is parsed for the showdown API and sent.
 
-The Nash Equilibrium is calculated using command-line tools provided by the [Gambit](http://www.gambit-project.org/) project.
-This decision method should only be used when running with Docker and will fail otherwise.
-
-This decision method is **not** deterministic. The bot **may** make a different move if presented with the same situation again.
-
-### Ou Scraped Teams (experimental)
-
-use `BATTLE_BOT=ou_scraped_teams`
-
-Only use with `POKEMON_MODE=gen8ou`. Using a file of OU sets & teams, this battle-bot is meant to have a better
-understanding of Pokeon sets that may appear in gen8ou.
-
-Still uses the `safest` decision making method for picking a move, but in theory the knowledge of sets should
-result in better decision making.
-
-### Most Damage
-use `BATTLE_BOT=most_damage`
-
-Selects the move that will do the most damage to the opponent
-
-Does not switch
-
-## Performance
-
-These are the default battle-bot's results in three different formats for roughly 75 games played on a fresh account:
-
-![RelativeWeightsRankings](https://i.imgur.com/eNpIlVg.png)
-
-## Write your own bot
-Create a package in `showdown/battle_bots` with a module named `main.py`. In this module, create a class named `BattleBot`, override the Battle class, and implement your own `find_best_move` function.
-
-Set the `BATTLE_BOT` environment variable to the name of your package and your function will be called each time PokemonShowdown prompts the bot for a move
+This follows a multiple-shot strategy. Usually it doesn't provide a good answer first time, so we ask Yamper until we get a valid response. This has the inconvenienve that making a decision may take a few seconds, so we recommend disabling timer to avoid running out of time.
 
 ## The Battle Engine
 The bots in the project all use a Pokemon battle engine to determine all possible transpositions that may occur from a pair of moves.
@@ -154,6 +108,3 @@ Specify a directory:
 ```
 TEAM_NAME=gen8/ou
 ```
-
-## Questions? Wanna Chat?
-Send me a message on discord: pmariglia#5568

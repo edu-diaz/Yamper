@@ -92,6 +92,7 @@ def ask_yamper(user_options, opponent_pokemon):
     switch_options = [s for s in [a for a in user_options if "switch" in a]]
     attack_options = [a for a in user_options if "switch" not in a]
     bot_choice = None
+    logger.info("User options: " + ", ".join(user_options))
 
     # If I can both switch or attack then I let decide Yamper
     if switch_options and attack_options:
@@ -110,24 +111,21 @@ def ask_yamper(user_options, opponent_pokemon):
         logger.debug(f"Attack = {attack}; Switch = {switch}")
 
     
-    if attack and attack_options:
+    if attack or not switch_options:
         request = "Pick one of the following: " + ", ".join(attack_options)
         request = request.replace(request[request.rindex(','):], " or" + request[request.rindex(',')+1:]) if "," in request else request
-        logger.info("Request: " + request)
         bot_choice, response = get_valid_response(request, attack_options)
-        logger.info("Response: " + response)
             
-    if switch and switch_options:
+    if switch or not attack_options:
         request = "Pick one of the following: " + ", ".join(s.replace("switch ", "") for s in switch_options)
         request = request.replace(request[request.rindex(','):], " or" + request[request.rindex(',')+1:]) if "," in request else request
-        logger.info("Request: " + request)
         bot_choice, response = get_valid_response(request, switch_options)
-        logger.info("Response: " + response)
 
     return bot_choice
 
 
 def get_valid_response(request, options):
+    logger.info("Request: " + request)
     model_parameters = {"text": request, "length": 30, "temperature": 0.3, "topK": 50, "topP": 0.8}
     response = None
     bot_choice = None
@@ -137,6 +135,8 @@ def get_valid_response(request, options):
         logger.debug("Request: " + response)
         choice = [a for a in options if a.replace("switch ", "") in response]
         bot_choice = choice[0] if len(choice) == 1 else bot_choice
+    logger.info("Response: " + response)
+    logger.info("Bot choice: " + bot_choice)
     return bot_choice, response
 
 
