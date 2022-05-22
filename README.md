@@ -50,17 +50,26 @@ specified by environment variables read from the file named `.env`
 ### Running with Docker
 This requires Docker 17.06 or higher.
 
-**1. Clone the repository**
+**1. Create the configuration file**
 
-`git clone https://github.com/pmariglia/showdown.git`
+Create an .env file like this example:
+```
+BATTLE_BOT=yamper
+TIMER=OFF
+SAVE_REPLAY=False
+LOG_LEVEL=INFO
+WEBSOCKET_URI=sim.smogon.com:8000
+PS_USERNAME=<Your Pokemon Showdown user>
+PS_PASSWORD=<Your Pokemon Showdown password>
+BOT_MODE=SEARCH_LADDER
+POKEMON_MODE=gen8randombattle
+RUN_COUNT=1
+BANANA_API_KEY=<Your Banana GPT-J API key>
+```
 
-**2. Build the Docker image**
+**2. Run the docker image**
 
-`docker build . -t showdown`
-
-**3. Run with an environment variable file**
-
-`docker run --env-file .env showdown`
+`docker run --env-file .env gameduser/yamper`
 
 ## Battle Bots
 
