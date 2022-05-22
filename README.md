@@ -1,7 +1,7 @@
 # Yamper  ![yamper](https://play.pokemonshowdown.com/sprites/xyani/yamper.gif)
 A Pokémon battle-bot based on NLP that can play battles on [Pokemon Showdown](https://pokemonshowdown.com/).
 
-![badge](https://github.com/pmariglia/showdown/actions/workflows/pythonapp.yml/badge.svg)
+![badge](https://github.com/gameduser/Yamper/actions/workflows/pythonapp.yml/badge.svg)
 
 ## Python version
 Developed and tested using Python 3.6.3.
@@ -96,7 +96,7 @@ This follows a multiple-shot strategy. Usually it doesn't provide a good answer 
 ## The Battle Engine
 The bots in the project all use a Pokemon battle engine to determine all possible transpositions that may occur from a pair of moves.
 
-For more information, see [ENGINE.md](https://github.com/pmariglia/showdown/blob/master/ENGINE.md) 
+For more information, see [ENGINE.md](https://github.com/gameduser/yamper/blob/master/ENGINE.md) 
 
 ## Specifying Teams
 You can specify teams by setting the `TEAM_NAME` environment variable.
