@@ -1,5 +1,7 @@
-FROM python:3.6
+FROM python:3.6-slim
 
+RUN apt-get -y update
+RUN apt-get -y install git
 RUN git clone https://github.com/gameduser/Yamper.git
 WORKDIR /Yamper
 
