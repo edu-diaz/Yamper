@@ -90,7 +90,7 @@ def ask_yamper(user_options, opponent_pokemon, turn):
     switch_options = [s for s in [a for a in user_options if "switch" in a]]
     attack_options = [a for a in user_options if "switch" not in a]
     bot_choice = None
-    logger.info("USER OPTIONS: " + ", ".join(user_options))
+    logger.debug("USER OPTIONS: " + ", ".join(user_options))
 
     if attack_options:
         request = "The opponent is " + opponent_pokemon + ". Which next move will you do: " + ", ".join(attack_options) + " or switch to another pokemon?"
