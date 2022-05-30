@@ -2,14 +2,11 @@ import logging
 
 import config
 import constants
-import banana_dev as banana
-import os
+import importlib
 
 from showdown.engine.objects import StateMutator
 from showdown.engine.select_best_move import pick_safest
 from showdown.engine.select_best_move import get_payoff_matrix
-
-from difflib import SequenceMatcher
 
 
 logger = logging.getLogger(__name__)
@@ -86,7 +83,7 @@ def pick_yamper_move(battles):
 
 
 def ask_yamper(user_options, opponent_pokemon, turn):
-    logger.info(f"=========================== TURN {turn} ===========================")
+    logger.info(f"========================================= TURN {turn} =========================================")
     switch_options = [s for s in [a for a in user_options if "switch" in a]]
     attack_options = [a for a in user_options if "switch" not in a]
     bot_choice = None
@@ -109,14 +106,14 @@ def ask_yamper(user_options, opponent_pokemon, turn):
 
 
 def get_valid_response(request, options, attack_and_switch=False):
+    battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format(config.battle_bot_module))
     logger.info("REQUEST: " + request)
-    model_parameters = {"text": request, "length": 15, "temperature": 0.4, "topK": 50, "topP": 0.8}
     response = None
     bot_choice = None
     options = options + ["switch"] if attack_and_switch else options
     while (bot_choice is None):
         logger.debug("REQUEST: " + request)
-        response = banana.run(os.environ['BANANA_API_KEY'], "gptj", model_parameters)["modelOutputs"][0]["output"].lower().strip()
+        response = battle_module.BattleBot.call_model(request)
         logger.debug("REQUEST: " + response)
         choice = [a for a in options if a.replace("switch ", "") in response]
         bot_choice = choice[0] if len(choice) == 1 else bot_choice

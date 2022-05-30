@@ -16,7 +16,7 @@ The configurations available are:
 BATTLE_BOT: (string, default "yamper") The BattleBot module to use. More on this below
 TIMER: (string, default OFF) Request initiating timer at the beginning of the battle or not
 SAVE_REPLAY: (bool, default False) Specifies whether or not to save replays of the battles
-LOG_LEVEL: (string, default "DEBUG") The Python logging level 
+LOG_LEVEL: (string, default "INFO") The Python logging level 
 WEBSOCKET_URI: (string, default is the official PokemonShowdown websocket address: "sim.smogon.com:8000") The address to use to connect to the Pokemon Showdown websocket 
 PS_USERNAME: (string, required) Pokemon Showdown username
 PS_PASSWORD: (string) Pokemon Showdown password 
