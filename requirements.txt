@@ -1,4 +1,4 @@
-torch==1.11.0
+torch==1.10.2
 transformers==4.18.0
 banana-dev==3.0.1
 environs==4.1.0
