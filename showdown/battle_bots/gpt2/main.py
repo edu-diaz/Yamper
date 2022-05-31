@@ -3,7 +3,8 @@ from showdown.battle import Battle
 from ..helpers import format_decision
 from ..helpers import pick_yamper_move
 
-from transformers import pipeline
+import requests
+import json
 
 class BattleBot(Battle):
     def __init__(self, *args, **kwargs):
@@ -16,5 +17,7 @@ class BattleBot(Battle):
 
     @staticmethod
     def call_model(request):
-        generator = pipeline('text-generation', model='gpt2')
-        return generator(request, max_length=15, num_return_sequences=1)[0]['generated_text'].lower().strip()
+        url = "https://main-gpt2-large-jeong-hyun-su.endpoint.ainize.ai/gpt2-large/long"
+        payload={'text': request, 'num_samples': '1', 'length': '15'}
+        headers = {'accept': 'application/json'}
+        return json.loads(requests.request("POST", url, headers=headers, data=payload).text).get("0")
