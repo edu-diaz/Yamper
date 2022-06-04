@@ -5,9 +5,11 @@ from copy import deepcopy
 from environs import Env
 
 import constants
+import statistics
 import config
 from config import init_logging
 import logging
+from showdown.battle import Battle
 
 from teams import load_team
 from showdown.run_battle import pokemon_battle
@@ -99,6 +101,8 @@ async def showdown():
             losses += 1
 
         logger.info("W: {}\tL: {}".format(wins, losses))
+        if Battle.attemps:
+            logger.info("Average attemps: " + str(round(statistics.mean(Battle.attemps), 2)))
 
         check_dictionaries_are_unmodified(original_pokedex, original_move_json)
 

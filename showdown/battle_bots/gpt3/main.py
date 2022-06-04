@@ -3,9 +3,8 @@ from showdown.battle import Battle
 from ..helpers import format_decision
 from ..helpers import pick_yamper_move
 
-import banana_dev as banana
 import os
-
+import openai
 
 class BattleBot(Battle):
     def __init__(self, *args, **kwargs):
@@ -19,5 +18,5 @@ class BattleBot(Battle):
 
     @staticmethod
     def call_model(request):
-        model_parameters = {"text": request, "length": 35, "temperature": 0.8, "topK": 50, "topP": 0.8}
-        return banana.run(os.environ['BANANA_API_KEY'], "gptj", model_parameters)["modelOutputs"][0]["output"].lower().strip()
+        openai.api_key = os.getenv("OPENAI_API_KEY")
+        return openai.Completion.create(engine="text-davinci-002", prompt=request, temperature=0, max_tokens=100, top_p=1, frequency_penalty=0, presence_penalty=0, stop=["\n"])

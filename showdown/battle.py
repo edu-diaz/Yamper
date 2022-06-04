@@ -57,6 +57,8 @@ smart_team_preview = {
 
 class Battle(ABC):
 
+    attemps = []
+
     def __init__(self, battle_tag):
         self.battle_tag = battle_tag
         self.user = Battler()

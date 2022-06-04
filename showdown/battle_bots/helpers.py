@@ -75,48 +75,49 @@ def pick_yamper_move(battles):
     for _, b in enumerate(battles):
         state = b.create_state()
         mutator = StateMutator(state)
-        user_options, _ = b.get_all_options()
         logger.debug("Searching through the state: {}".format(mutator.state))
-        bot_choice = ask_yamper(user_options, b.opponent.active.base_name, b.turn)
+        bot_choice, attemps = ask_yamper(b)
+    return bot_choice, attemps
 
-    return bot_choice
 
-
-def ask_yamper(user_options, opponent_pokemon, turn):
-    logger.info(f"========================================= TURN {turn} =========================================")
-    switch_options = [s for s in [a for a in user_options if "switch" in a]]
-    attack_options = [a for a in user_options if "switch" not in a]
-    bot_choice = None
+def ask_yamper(battle):
+    logger.info(f"========================================= TURN {battle.turn} =========================================")
+    user_options, _ = battle.get_all_options()
     logger.debug("USER OPTIONS: " + ", ".join(user_options))
+    switch_options = [s.replace("switch ", "") for s in [a for a in user_options if "switch " in a]]
+    attack_options = [a for a in user_options if "switch " not in a]
+    status_prompt = "You are in a Pokémon battle where you have " + str(len(battle.user.reserve)) + " Pokémons. "
+    attack_prompt = "Your available attacks are " + ", ".join(attack_options[:-1]) + " or " + attack_options[-1] + ". " if attack_options else ""
+    switch_prompt = "You can switch to " + ", ".join(switch_options[:-1]) + " or " + switch_options[-1] + ". " if switch_options else ""
+    bias_prompt = "The best option is " + pick_safest_move_from_battles([battle]) + ". What will you do?"
+    try:
+        nlp_health = lambda rate : "high" if rate >= 0.8 else "mid" if rate >= 0.4 else "low"
+        opponent_health = nlp_health(battle.opponent.active.hp/battle.opponent.active.max_hp)
+        active_health = nlp_health(battle.user.active.hp/battle.user.active.max_hp)
+        status_prompt += "The opponent is a " + battle.opponent.active.base_name + " with " + opponent_health + " health, meanwhile your Pokémon is a " + battle.user.active.base_name + " with " + active_health + " health. "
+    except ZeroDivisionError:
+        pass
+    bot_choice, attemps = get_valid_response(status_prompt + attack_prompt + switch_prompt + bias_prompt, attack_options + switch_options)
+    bot_choice = "switch " + bot_choice if any(bot_choice  in s for s in switch_options) else bot_choice
+    return bot_choice, attemps
 
-    if attack_options:
-        request = "The opponent is " + opponent_pokemon + ". Which next move will you do: " + ", ".join(attack_options) + " or switch to another pokemon?"
-        bot_choice = get_valid_response(request, attack_options, True)
-        if bot_choice == "switch" and switch_options:
-            request = "The opponent is " + opponent_pokemon + ". Which Pokemon will you choose: " + (", ".join(switch_options[:-1]) + " or " + switch_options[-1]).replace("switch ", "") + "?"
-            bot_choice = get_valid_response(request, switch_options)
-        else:
-            request = "The opponent is " + opponent_pokemon + ". Which next move do you prefer: " + ", ".join(attack_options) + " or switch to another pokemon? Switching is the worst option."
-            bot_choice = get_valid_response(request, attack_options, False)
-    else:
-        request = "The opponent is " + opponent_pokemon + ". Which Pokemon will you choose: " + (", ".join(switch_options[:-1]) + " or " + switch_options[-1]).replace("switch ", "") + "?"
-        bot_choice = get_valid_response(request, switch_options)
 
-    return bot_choice
-
-
-def get_valid_response(request, options, attack_and_switch=False):
+def get_valid_response(prompt, options):
     battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format(config.battle_bot_module))
-    logger.info("REQUEST: " + request)
+    logger.info("PROMPT: " + prompt)
     response = None
     bot_choice = None
-    options = options + ["switch"] if attack_and_switch else options
+    attemps = 0
     while (bot_choice is None):
-        logger.debug("REQUEST: " + request)
-        response = battle_module.BattleBot.call_model(request)
-        logger.debug("REQUEST: " + response)
+        logger.debug("PROMPT: " + prompt)
+        response = battle_module.BattleBot.call_model(prompt)
+        logger.debug("RESPONSE: " + response)
         choice = [a for a in options if a.replace("switch ", "") in response]
-        bot_choice = choice[0] if len(choice) == 1 else bot_choice
+        bot_choice = choice[0] if len(choice) != 0 else bot_choice
+        # Sometimes the response is the question repeated. We avoid it with this.
+        if prompt[:len(prompt)//2].lower() in response.lower():
+            bot_choice = None
+        attemps += 1
     logger.info("RESPONSE: " + response)
     logger.info("CHOICE: " + bot_choice)
-    return bot_choice
+    return bot_choice, attemps

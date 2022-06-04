@@ -13,7 +13,7 @@ Environment variables are used for configuration which are by default read from 
 
 The configurations available are:
 ```
-BATTLE_BOT: (string, default "yamper") The BattleBot module to use. More on this below
+BATTLE_BOT: (string, default "gptj") The BattleBot module to use. More on this below
 TIMER: (string, default OFF) Request initiating timer at the beginning of the battle or not
 SAVE_REPLAY: (bool, default False) Specifies whether or not to save replays of the battles
 LOG_LEVEL: (string, default "INFO") The Python logging level 
@@ -27,6 +27,7 @@ TEAM_NAME: (string, required if POKEMON_MODE is one where a team is required) Th
 RUN_COUNT: (integer, required) The amount of games this bot will play before quitting
 ROOM_NAME: (string, optional) Optionally join a room by this name is BOT_MODE is "ACCEPT_CHALLENGE"
 BANANA_API_KEY: (string, required if BATTLE_BOT is yamper) The API key to connect with the GPT-J model developped by Banana.
+OPENAI_API_KEY: (string, required if BATTLE_BOT is gpt3) The API key to connect with the GPT-3 model developped by el tito Elon
 ```
 
 There is a sample `.env` file in this repository.
@@ -54,7 +55,7 @@ This requires Docker 17.06 or higher.
 
 Create an .env file like this example:
 ```
-BATTLE_BOT=yamper
+BATTLE_BOT=gptj
 TIMER=OFF
 SAVE_REPLAY=False
 LOG_LEVEL=INFO
@@ -86,12 +87,20 @@ This is equivalent to the [Expectiminimax](https://en.wikipedia.org/wiki/Expecti
 
 This decision type is deterministic - the bot will always make the same move given the same situation again.
 
-### Yamper
-use `BATTLE_BOT=yamper` (default unless otherwise specified)
+### GPT-J
+use `BATTLE_BOT=gptj` (default unless otherwise specified)
 
-Using the [Banana GPT-J public model](https://www.banana.dev/pretrained-models/python3/gptj), it will decide each next movement by asking the model with an API call. Options are usually attacking or switching Pokemon, so first it asks what does it prefer. If decides to attack, we request which attack does prefer. Finally the answer is parsed for the showdown API and sent.
+Using the [Banana GPT-J public model](https://www.banana.dev/pretrained-models/python3/gptj), it will decide each next movement by asking the model with an API call. Options are usually attacking or switching Pokemon, so first it asks what does it prefer. You will need to provide your own API key.
 
-This follows a multiple-shot strategy. Usually it doesn't provide a good answer first time, so we ask Yamper until we get a valid response. This has the inconvenienve that making a decision may take a few seconds, so we recommend disabling timer to avoid running out of time.
+### GPT-2
+use `BATTLE_BOT=gpt2`
+
+Using a GPT-2 public model, it will decide each next movement by asking the model with an API call. Same behavior as GPT-J.
+
+### GPT-3
+use `BATTLE_BOT=gpt3`
+
+Using a GPT-3 public model, it will decide each next movement by asking the model with an API call. Same behavior as GPT-J. You will need to provide your own API key.
 
 ## The Battle Engine
 The bots in the project all use a Pokemon battle engine to determine all possible transpositions that may occur from a pair of moves.
