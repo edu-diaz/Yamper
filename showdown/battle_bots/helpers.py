@@ -1,4 +1,5 @@
 import logging
+import re
 
 import config
 import constants
@@ -76,20 +77,24 @@ def pick_yamper_move(battles):
         state = b.create_state()
         mutator = StateMutator(state)
         logger.debug("Searching through the state: {}".format(mutator.state))
-        bot_choice, attemps = ask_yamper(b)
-    return bot_choice, attemps
+        bot_choice, shots = ask_yamper(b)
+    return bot_choice, shots
 
 
 def ask_yamper(battle):
     logger.info(f"========================================= TURN {battle.turn} =========================================")
+
     user_options, _ = battle.get_all_options()
-    logger.debug("USER OPTIONS: " + ", ".join(user_options))
     switch_options = [s.replace("switch ", "") for s in [a for a in user_options if "switch " in a]]
     attack_options = [a for a in user_options if "switch " not in a]
+    safest_option = pick_safest_move_from_battles([battle])
+
+    prompt_list = lambda start, options: (start + ", ".join(options) + ". ")[::-1].replace(',', ' or'[::-1], 1)[::-1] if options else ""
     status_prompt = "You are in a Pokémon battle where you have " + str(len(battle.user.reserve)) + " Pokémons. "
-    attack_prompt = "Your available attacks are " + ", ".join(attack_options[:-1]) + " or " + attack_options[-1] + ". " if attack_options else ""
-    switch_prompt = "You can switch to " + ", ".join(switch_options[:-1]) + " or " + switch_options[-1] + ". " if switch_options else ""
-    bias_prompt = "The best option is " + pick_safest_move_from_battles([battle]) + ". What will you do?"
+    attack_prompt = prompt_list("Your available attacks are ", attack_options)
+    switch_prompt = prompt_list("You can switch to ", switch_options)
+    bias_prompt = "The best option is " + safest_option + ". What will you do?"
+
     try:
         nlp_health = lambda rate : "high" if rate >= 0.8 else "mid" if rate >= 0.4 else "low"
         opponent_health = nlp_health(battle.opponent.active.hp/battle.opponent.active.max_hp)
@@ -97,27 +102,34 @@ def ask_yamper(battle):
         status_prompt += "The opponent is a " + battle.opponent.active.base_name + " with " + opponent_health + " health, meanwhile your Pokémon is a " + battle.user.active.base_name + " with " + active_health + " health. "
     except ZeroDivisionError:
         pass
-    bot_choice, attemps = get_valid_response(status_prompt + attack_prompt + switch_prompt + bias_prompt, attack_options + switch_options)
+
+    bot_choice, shots = get_valid_response(status_prompt + attack_prompt + switch_prompt + bias_prompt, attack_options, switch_options, safest_option.replace("switch ", ""))
     bot_choice = "switch " + bot_choice if any(bot_choice  in s for s in switch_options) else bot_choice
-    return bot_choice, attemps
+    return bot_choice, shots
 
 
-def get_valid_response(prompt, options):
+def get_valid_response(prompt, attack_options, switch_options, safest_option):
     battle_module = importlib.import_module('showdown.battle_bots.{}.main'.format(config.battle_bot_module))
     logger.info("PROMPT: " + prompt)
     response = None
     bot_choice = None
-    attemps = 0
+    shots = 0
     while (bot_choice is None):
-        logger.debug("PROMPT: " + prompt)
         response = battle_module.BattleBot.call_model(prompt)
         logger.debug("RESPONSE: " + response)
-        choice = [a for a in options if a.replace("switch ", "") in response]
-        bot_choice = choice[0] if len(choice) != 0 else bot_choice
+        parser = lambda options : [a for a in options if a in response.lower()]
+        attack_choice = parser(attack_options)
+        switch_choice = parser(switch_options)
+        if safest_option in response:
+            bot_choice = safest_option
+        elif attack_choice:
+            bot_choice = attack_choice[0]
+        elif switch_choice:
+            bot_choice = switch_choice[0]
         # Sometimes the response is the question repeated. We avoid it with this.
         if prompt[:len(prompt)//2].lower() in response.lower():
             bot_choice = None
-        attemps += 1
+        shots += 1
     logger.info("RESPONSE: " + response)
     logger.info("CHOICE: " + bot_choice)
-    return bot_choice, attemps
+    return bot_choice, shots

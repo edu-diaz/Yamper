@@ -57,7 +57,7 @@ smart_team_preview = {
 
 class Battle(ABC):
 
-    attemps = []
+    shots = []
 
     def __init__(self, battle_tag):
         self.battle_tag = battle_tag

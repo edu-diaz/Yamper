@@ -12,8 +12,8 @@ class BattleBot(Battle):
 
     def find_best_move(self):
         battles = self.prepare_battles(join_moves_together=True)
-        yamper_move, attemps = pick_yamper_move(battles)
-        Battle.attemps.append(attemps)
+        yamper_move, shots = pick_yamper_move(battles)
+        Battle.shots.append(shots)
         return format_decision(self, yamper_move)
 
     @staticmethod

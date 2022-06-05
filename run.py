@@ -101,8 +101,8 @@ async def showdown():
             losses += 1
 
         logger.info("W: {}\tL: {}".format(wins, losses))
-        if Battle.attemps:
-            logger.info("Average attemps: " + str(round(statistics.mean(Battle.attemps), 2)))
+        if Battle.shots:
+            logger.info("Average shots: " + str(round(statistics.mean(Battle.shots), 2)))
 
         check_dictionaries_are_unmodified(original_pokedex, original_move_json)
 

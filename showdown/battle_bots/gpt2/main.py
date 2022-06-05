@@ -12,13 +12,13 @@ class BattleBot(Battle):
 
     def find_best_move(self):
         battles = self.prepare_battles(join_moves_together=True)
-        yamper_move, attemps = pick_yamper_move(battles)
-        Battle.attemps.append(attemps)
+        yamper_move, shots = pick_yamper_move(battles)
+        Battle.shots.append(shots)
         return format_decision(self, yamper_move)
 
     @staticmethod
     def call_model(request):
         url = "https://main-gpt2-large-jeong-hyun-su.endpoint.ainize.ai/gpt2-large/long"
-        payload={'text': request, 'num_samples': '1', 'length': '35'}
+        payload={'text': request, 'num_samples': '1', 'length': '80'}
         headers = {'accept': 'application/json'}
         return json.loads(requests.request("POST", url, headers=headers, data=payload).text).get("0")

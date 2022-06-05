@@ -13,11 +13,11 @@ class BattleBot(Battle):
 
     def find_best_move(self):
         battles = self.prepare_battles(join_moves_together=True)
-        yamper_move, attemps = pick_yamper_move(battles)
-        Battle.attemps.append(attemps)
+        yamper_move, shots = pick_yamper_move(battles)
+        Battle.shots.append(shots)
         return format_decision(self, yamper_move)
 
     @staticmethod
     def call_model(request):
-        model_parameters = {"text": request, "length": 35, "temperature": 0.8, "topK": 50, "topP": 0.8}
+        model_parameters = {"text": request, "length": 80, "temperature": 0.8, "topK": 50, "topP": 0.8}
         return banana.run(os.environ['BANANA_API_KEY'], "gptj", model_parameters)["modelOutputs"][0]["output"].lower().strip()
